@@ -26,7 +26,7 @@ namespace MicrosoftAssignment.RateLimit
 
         private ThrottleInfo GetThrottleInfoFromCache()
         {
-            var throttleInfo = Cache.ContainsKey(ThrottleGroup) ? Cache[ThrottleGroup] : null;
+            Cache.TryGetValue(ThrottleGroup, out var throttleInfo);
 
             if (throttleInfo == null)
             {
@@ -44,8 +44,7 @@ namespace MicrosoftAssignment.RateLimit
 
         private ThrottleInfo CreateNewThrottleInfo()
         {
-            ThrottleInfo throttleInfo;
-            throttleInfo = new ThrottleInfo
+            var throttleInfo = new ThrottleInfo
             {
                 ExpiresAt = DateTime.Now.AddSeconds(_timeoutInSeconds),
                 RequestCount = 0
@@ -72,28 +71,10 @@ namespace MicrosoftAssignment.RateLimit
                 RequestCount = 1
             }, (key, throttleInfo) =>
             {
-                //TODO : handle this interlock
-                var throttleInfoRequestCount = throttleInfo.RequestCount;
-                Interlocked.Increment(ref throttleInfoRequestCount);
-                throttleInfo.RequestCount = throttleInfoRequestCount;
+                Interlocked.Increment(ref throttleInfo.RequestCount);
                 return throttleInfo;
             });
         }
-
-        public void IncrementRequestCount2()
-        {
-            ThrottleInfo throttleInfo = GetThrottleInfoFromCache();
-            throttleInfo.RequestCount++;
-            Cache[ThrottleGroup] = throttleInfo;
-        }
-
-
-        private class ThrottleInfo
-        {
-            public DateTime ExpiresAt { get; set; }
-            public int RequestCount { get; set; }
-        }
-
         public Dictionary<string, string> GetRateLimitHeaders()
         {
             var throttleInfo = GetThrottleInfoFromCache();
@@ -102,9 +83,9 @@ namespace MicrosoftAssignment.RateLimit
 
             var headers = new Dictionary<string, string>
             {
-                {"X-RateLimit-Limit", RequestLimit.ToString()},
-                {"X-RateLimit-Remaining", RequestsRemaining.ToString()},
-                {"X-RateLimit-Reset", ToUnixTime(throttleInfo.ExpiresAt).ToString()}
+                {"RateLimit-Limit", RequestLimit.ToString()},
+                {"RateLimit-Remaining", requestsRemaining.ToString()},
+                {"RateLimit-Reset", ToUnixTime(throttleInfo.ExpiresAt.Date).ToString()}
             };
             return headers;
         }
@@ -113,6 +94,11 @@ namespace MicrosoftAssignment.RateLimit
         {
             var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             return Convert.ToInt64((date.ToUniversalTime() - epoch).TotalSeconds);
+        }
+        private class ThrottleInfo
+        {
+            public DateTime ExpiresAt;
+            public int RequestCount;
         }
 
     }

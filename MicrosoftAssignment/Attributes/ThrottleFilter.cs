@@ -15,8 +15,8 @@ namespace MicrosoftAssignment.Attributes
         public string ThrottleGroup { get; }
 
         public ThrottleFilter(
-            int requestLimit = 1,
-            int timeoutInSeconds = 3,
+            int requestLimit = 5,
+            int timeoutInSeconds = 5,
             [CallerMemberName] string throttleGroup = null)
         {
             ThrottleGroup = throttleGroup;
@@ -26,16 +26,15 @@ namespace MicrosoftAssignment.Attributes
         public override Task OnActionExecutingAsync(HttpActionContext actionContext, CancellationToken cancellationToken)
         {
             var clientId = actionContext.ActionArguments["id"];
-            _throttler.ThrottleGroup = clientId.ToString();
+            _throttler.ThrottleGroup = clientId?.ToString();
 
-            if (_throttler.RequestShouldBeThrottled)
-            {
-                actionContext.Response = actionContext.Request.CreateResponse(
-                    (HttpStatusCode)429, "Too many requests");
+            if (!_throttler.RequestShouldBeThrottled)
+                return base.OnActionExecutingAsync(actionContext, cancellationToken);
+            actionContext.Response = actionContext.Request.CreateResponse(
+                (HttpStatusCode)503, "Too many requests");
         
-                AddThrottleHeaders(actionContext.Response);
-            }
-        
+            AddThrottleHeaders(actionContext.Response);
+
             return base.OnActionExecutingAsync(actionContext, cancellationToken);
         }
         
