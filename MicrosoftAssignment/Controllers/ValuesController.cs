@@ -8,11 +8,11 @@ namespace MicrosoftAssignment.Controllers
 {
     public class ValuesController : ApiController
     {
+        // GET api/values/5
         [ThrottleFilter]
-        [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<IHttpActionResult> Get(int id)
         {
-            return new string[] { "value1", "value2" };
+            return await Task.FromResult(Ok($"Request from client {id}"));
         }
     }
 }
