@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel.Channels;
 using System.Threading;
@@ -9,9 +10,6 @@ namespace ClientSolution
 {
     class Program
     {
-        private static ConcurrentBag<ClientRequestExecutor> Bag;
-        static volatile bool exit = false;
-
         static async Task Main(string[] args)
         {
             Thread.Sleep(5000);
@@ -21,38 +19,15 @@ namespace ClientSolution
 
             int.TryParse(userInput, out var numberOfClients);
 
-            Bag = new ConcurrentBag<ClientRequestExecutor>();
-
-            for (var i = 0; i < numberOfClients - 1; i++)
+            if (numberOfClients == 0)
             {
-                Bag.Add(new ClientRequestExecutor(i + 1));
+                Console.WriteLine("invalid input");
             }
-            
-            // Console.WriteLine("Sending requests, press q to stop the program");
-            //
-            // await Task.Factory.StartNew(() =>
-            // {
-            //     while (Console.ReadKey().Key != ConsoleKey.Q) ;
-            //     exit = true;
-            // });
-            //
-            // while (!exit)
-            // {
-            //      await Task.WhenAll(Bag.Select(x => x.Execute()).ToArray());
-            // }
-
-            Task.WaitAll(Bag.Select(x => x.Execute()).ToArray());
-
-            Console.WriteLine("DONE!!!!");
-            Console.ReadKey();
-        }
-        public async Task PeriodicFooAsync(TimeSpan interval, CancellationToken cancellationToken)
-        {
-            while (true)
+            else
             {
-                // await FooAsync();
-                await Task.Delay(interval, cancellationToken);
+                await new ProgramRunner(numberOfClients).Run();
             }
+
         }
 
     }

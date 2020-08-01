@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,21 +8,24 @@ namespace ClientSolution
 {
     public class ClientRequestExecutor
     {
-        public HttpClient HttpClient { get; set; }
-        public int Id { get; set; }
+        private HttpClient HttpClient { get; set; }
+        private int Id { get; set; }
 
         public ClientRequestExecutor(int numberOfClients)
         {
             Id = GenerateIdFromClientsRange(numberOfClients);
-            HttpClient = new HttpClient {BaseAddress = new Uri("http://localhost:53696")};
+            
+            HttpClient = new HttpClient {BaseAddress = new Uri(ConfigurationManager.AppSettings["Uri"]) };
         }
 
         public async Task<HttpResponseMessage> Execute()
         {
             while (true)
             { 
-                var result =await HttpClient.GetAsync($"/api/values/{Id}");
+                var result = await HttpClient.GetAsync($"/api/values/{Id}");
+
                 Console.WriteLine($"Client id : {Id}\n{result.Headers}");
+
                 await Task.Delay(GenerateRandomTimeSpan(), CancellationToken.None);
             }
         }
