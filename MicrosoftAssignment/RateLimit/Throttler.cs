@@ -30,23 +30,26 @@ namespace MicrosoftAssignment.RateLimit
 
             if (throttleInfo == null)
             {
-                throttleInfo = new ThrottleInfo
-                {
-                    ExpiresAt = DateTime.Now.AddSeconds(_timeoutInSeconds),
-                    RequestCount = 0
-                };
+                throttleInfo = CreateNewThrottleInfo();
             }
             else if(throttleInfo.ExpiresAt <= DateTime.Now)
             {
                 Cache.TryRemove(ThrottleGroup, out throttleInfo);
-                throttleInfo = new ThrottleInfo
-                {
-                    ExpiresAt = DateTime.Now.AddSeconds(_timeoutInSeconds),
-                    RequestCount = 0
-                };
+                throttleInfo = CreateNewThrottleInfo();
 
             }
 
+            return throttleInfo;
+        }
+
+        private ThrottleInfo CreateNewThrottleInfo()
+        {
+            ThrottleInfo throttleInfo;
+            throttleInfo = new ThrottleInfo
+            {
+                ExpiresAt = DateTime.Now.AddSeconds(_timeoutInSeconds),
+                RequestCount = 0
+            };
             return throttleInfo;
         }
 
