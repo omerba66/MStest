@@ -127,14 +127,14 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
-    <Compile Include="Attributes\ThrottleFilter.cs" />
+    <Compile Include="Attributes\RateLimitFilter.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RateLimit\Throttler.cs" />
+    <Compile Include="Throttling\Throttler.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="favicon.ico" />

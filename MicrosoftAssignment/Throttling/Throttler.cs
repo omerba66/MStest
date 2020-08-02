@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace MicrosoftAssignment.RateLimit
+namespace MicrosoftAssignment.Throttling
 {
     public class Throttler
     {
@@ -36,7 +36,6 @@ namespace MicrosoftAssignment.RateLimit
             {
                 Cache.TryRemove(ThrottleGroup, out throttleInfo);
                 throttleInfo = CreateNewThrottleInfo();
-
             }
 
             return throttleInfo;
@@ -52,15 +51,12 @@ namespace MicrosoftAssignment.RateLimit
             return throttleInfo;
         }
 
-        public bool RequestShouldBeThrottled
+        public bool RequestShouldBeThrottled()
         {
-            get
-            {
                 var throttleInfo = GetThrottleInfoFromCache();
                 WindowResetDate = throttleInfo.ExpiresAt;
                 RequestsRemaining = Math.Max(RequestLimit - throttleInfo.RequestCount, 0);
                 return (throttleInfo.RequestCount > RequestLimit);
-            }
         }
 
         public void IncrementRequestCount()
@@ -84,16 +80,9 @@ namespace MicrosoftAssignment.RateLimit
             var headers = new Dictionary<string, string>
             {
                 {"RateLimit-Limit", RequestLimit.ToString()},
-                {"RateLimit-Remaining", requestsRemaining.ToString()},
-                {"RateLimit-Reset", ToUnixTime(throttleInfo.ExpiresAt.Date).ToString()}
+                {"RateLimit-Remaining", requestsRemaining.ToString()}
             };
             return headers;
-        }
-
-        private long ToUnixTime(DateTime date)
-        {
-            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            return Convert.ToInt64((date.ToUniversalTime() - epoch).TotalSeconds);
         }
         private class ThrottleInfo
         {

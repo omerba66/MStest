@@ -11,11 +11,11 @@ namespace ClientSolution
         private HttpClient HttpClient { get; set; }
         private int Id { get; set; }
 
-        public ClientRequestExecutor(int numberOfClients)
+        public ClientRequestExecutor(int numberOfClients, string Uri)
         {
             Id = GenerateIdFromClientsRange(numberOfClients);
             
-            HttpClient = new HttpClient {BaseAddress = new Uri(ConfigurationManager.AppSettings["Uri"]) };
+            HttpClient = new HttpClient {BaseAddress = new Uri(Uri) };
         }
 
         public async Task<HttpResponseMessage> Execute()

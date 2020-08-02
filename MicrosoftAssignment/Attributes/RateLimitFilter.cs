@@ -5,16 +5,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http.Controllers;
 using System.Web.Http.Filters;
-using MicrosoftAssignment.RateLimit;
+using MicrosoftAssignment.Throttling;
 
 namespace MicrosoftAssignment.Attributes
 {
-    public class ThrottleFilter : ActionFilterAttribute
+    public class RateLimitFilter : ActionFilterAttribute
     {
         private readonly Throttler _throttler;
         public string ThrottleGroup { get; }
 
-        public ThrottleFilter(
+        public RateLimitFilter(
             int requestLimit = 5,
             int timeoutInSeconds = 5,
             [CallerMemberName] string throttleGroup = null)
@@ -28,7 +28,12 @@ namespace MicrosoftAssignment.Attributes
             var clientId = actionContext.ActionArguments["id"];
             _throttler.ThrottleGroup = clientId?.ToString();
 
-            if (!_throttler.RequestShouldBeThrottled)
+            if (_throttler.ThrottleGroup == null)
+            {
+                actionContext.Response = CreateUnprocessableEntityResponse(actionContext);
+            }
+
+            if (!_throttler.RequestShouldBeThrottled())
                 return base.OnActionExecutingAsync(actionContext, cancellationToken);
             actionContext.Response = actionContext.Request.CreateResponse(
                 (HttpStatusCode)503, "Too many requests");
@@ -37,12 +42,22 @@ namespace MicrosoftAssignment.Attributes
 
             return base.OnActionExecutingAsync(actionContext, cancellationToken);
         }
-        
+
+        private HttpResponseMessage CreateUnprocessableEntityResponse(HttpActionContext actionContext)
+        {
+            return actionContext.Request.CreateResponse(
+                (HttpStatusCode)422, "Unprocessable Entity");
+        }
+
         public override Task OnActionExecutedAsync(HttpActionExecutedContext actionExecutedContext, CancellationToken cancellationToken)
         {
             var clientId = actionExecutedContext.ActionContext.ActionArguments["id"];
             _throttler.ThrottleGroup = clientId.ToString();
 
+            if (_throttler.ThrottleGroup == null)
+            {
+                actionExecutedContext.ActionContext.Response = CreateUnprocessableEntityResponse(actionExecutedContext.ActionContext);
+            }
 
             if (actionExecutedContext.Exception == null) _throttler.IncrementRequestCount();
             AddThrottleHeaders(actionExecutedContext.Response);

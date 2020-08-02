@@ -9,7 +9,7 @@ namespace MicrosoftAssignment.Controllers
     public class ValuesController : ApiController
     {
         // GET api/values/5
-        [ThrottleFilter]
+        [RateLimitFilter]
         public async Task<IHttpActionResult> Get(int id)
         {
             return await Task.FromResult(Ok($"Request from client {id}"));
